@@ -15,12 +15,15 @@ class SocialGraph:
         Creates a bi-directional friendship
         """
         if user_id == friend_id:
-            print("WARNING: You cannot be friends with yourself")
+            # print("WARNING: You cannot be friends with yourself")
+            return False 
         elif friend_id in self.friendships[user_id] or user_id in self.friendships[friend_id]:
-            print("WARNING: Friendship already exists")
+            # print("WARNING: Friendship already exists")
+            return False
         else:
             self.friendships[user_id].add(friend_id)
             self.friendships[friend_id].add(user_id)
+            return True
 
     def add_user(self, name):
         """
@@ -47,38 +50,21 @@ class SocialGraph:
 
         # Add users
         for i in range(num_users):
-            self.add_user(f'User {i+1}') 
+            self.add_user(f'User {i+1}')
 
-        # # ONE POSSIBLE SOLUTION ⬇️
-        # # --> use a set to check if we've added to possible_friendships already
-        # possible_friendships = []
-        # already_possibly_friends = set() # o(n) space for generating set
-        # for user_id in self.users:
-        #     for friend_id in self.users:
-        #         if user_id == friend_id: continue # don't add a possible friendship with itself <--> no (1,1)
-        #         if (user_id, friend_id) in already_possibly_friends: continue # don't add if already possibly friends
-        #         possible_friendships.append((user_id, friend_id))
-        #         already_possibly_friends.add((friend_id, user_id)) # add tuple of possible friends to prevent duplicates
+        target_friendships = num_users * avg_friendships
+        total_friendships = 0
+
+        while total_friendships < target_friendships:
+          user_id = random.randint(1, self.last_id)
+          friend_id = random.randint(1, self.last_id)
+
+          # ⬇️ this is going to succeed or fail per the changes we made to [add_friendship()] ⬇️
+          # --> will only be true if both succeeded so you increment by 2
+          if self.add_friendship(user_id, friend_id):
+             total_friendships += 2
 
 
-        # ANOTHER POSSIBLE SOLUTION ⬇️
-        # --> don't allow [friend_id] to go places that would allow duplicates
-        # --> [friend_id] should never be less than or equal to the [user_id]
-        possible_friendships = []
-        for user_id in self.users:
-            for friend_id in range(user_id + 1, self.last_id + 1):
-                possible_friendships.append((user_id, friend_id))
-
-        # print(possible_friendships)
-        random.shuffle(possible_friendships)
-        # print('---')
-        # print(possible_friendships)
-
-        for i in range(num_users * avg_friendships // 2):
-            friendship = possible_friendships[i]
-            self.add_friendship(friendship[0], friendship[1])
-            # ⬆️⬇️ python3 shorthand ⬆️⬇️
-            # self.add_friendship(*friendship)
 
 
 
@@ -98,7 +84,7 @@ class SocialGraph:
 
 if __name__ == '__main__':
     sg = SocialGraph()
-    sg.populate_graph(10, 2)
+    sg.populate_graph(100000, 2)
     print(sg.friendships)
     connections = sg.get_all_social_paths(1)
     print(connections)
