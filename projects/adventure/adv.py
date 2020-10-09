@@ -24,6 +24,7 @@ world.load_graph(room_graph)
 # Print an ASCII map
 # world.print_rooms()
 
+# place the player at the start
 player = Player(world.starting_room)
 
 ''' ⬇️ how ⬇️ '''
@@ -35,7 +36,7 @@ player = Player(world.starting_room)
 #       --> go from dead-end to dead-end
 # ----> ⬇️ bfs() ⬇️ <-----
 #   --> find shortest path from node-to-node using visited_node_path
-#   --> update the 'n' 's' 'e' 'w' path taken
+#   --> update the 'n' 's' 'e' 'w' path taken when we find the room we are looking for
 
 def recursive_room_search(starting_room, room_graph, room_exit_dictionary=None, visited_nodes_path=None):
     if visited_nodes_path is None:
@@ -77,8 +78,8 @@ def recursive_room_search(starting_room, room_graph, room_exit_dictionary=None, 
 ''' ⬇️ bfs ⬇️ '''
 #   used to add [direction_path] to [traversal_path] as we step through the [visited_nodes_path] and map the directions
 def bfs(starting_room, next_room, room_exit_dictionary):
-    # [visited_nodes_path] allows us to run faster without visiting/updating room multiple times
-    visited_nodes_path = set()
+    # [bfs_visited_nodes] allows us to run faster without visiting/updating room multiple times
+    bfs_visited_nodes = set()
     room_queue = Queue() # queue to explore room order
     direction_path_queue = Queue() # queue the exit directions travel
     
@@ -92,14 +93,14 @@ def bfs(starting_room, next_room, room_exit_dictionary):
         direction_path = direction_path_queue.dequeue() # capture next direction to travel
         
         # last room in next_path taken from queue <--> newest explored room
-        last_room_in_next_path = next_path[-1] 
+        room = next_path[-1] 
         # if the last room in the next path has not been visited ...
-        # --> add that room to the [visited_nodes_path]
-        if last_room_in_next_path not in visited_nodes_path:
-            visited_nodes_path.add(last_room_in_next_path)
-            # if that new room is the next_room we're looking for ...
+        # --> add that room to the [bfs_visited_nodes]
+        if room not in bfs_visited_nodes:
+            bfs_visited_nodes.add(room)
+            # BASE_CASE: if that new room is the room we're looking for ...
             # --> return the [direction_path] to be added to the [traversal_path]
-            if last_room_in_next_path == next_room:
+            if room == next_room:
                 # print(direction_path)
                 return direction_path
             # if not, 
@@ -108,12 +109,12 @@ def bfs(starting_room, next_room, room_exit_dictionary):
             # --> make a copy of both next_path + direction_path
             # --> append new room exits + directions to the copies
             # --> enqueue copies to room + directions path queues
-            for direction in room_exit_dictionary[last_room_in_next_path]:
+            for direction in room_exit_dictionary[room]:
                 # copy both queues
                 path_copy = next_path.copy()
                 dirpath_copy = direction_path.copy()
                 # adding the newest room and direction to the copied room_path route 
-                path_copy.append(room_exit_dictionary[last_room_in_next_path][direction])
+                path_copy.append(room_exit_dictionary[room][direction])
                 dirpath_copy.append(direction)
                 room_queue.enqueue(path_copy)
                 direction_path_queue.enqueue(dirpath_copy)
@@ -124,12 +125,8 @@ def bfs(starting_room, next_room, room_exit_dictionary):
 # traversal_path = ['n', 'n']
 traversal_path = []
 
-# place the player in starting room
-# player = Player(world.starting_room)
-
 # use recursive function to visit all rooms and create a [room_exit_dictionary]
 room_exit_dictionary, visited_nodes_path = recursive_room_search(world.starting_room, room_graph)
-# print(visited_nodes_path)
 for i in range(len(visited_nodes_path) - 1):
     # find the path from room to room using visited_nodes_path
     path = bfs(visited_nodes_path[i], visited_nodes_path[i + 1], room_exit_dictionary)
